@@ -9,7 +9,7 @@ Requires the .NET SDK pinned in `global.json` (10.0.103).
 dotnet build LeaveWorkforce.slnx
 dotnet run --project src/Api --urls http://127.0.0.1:5199
 curl -i http://127.0.0.1:5199/health   # 200 {"status":"up"}
-dotnet test --solution LeaveWorkforce.slnx   # exits 8 ("zero tests") until Concurrency.Tests gains tests in entry 1.7
+dotnet test --solution LeaveWorkforce.slnx
 ```
 
 The connection string is read from `ConnectionStrings:App` (for example the `ConnectionStrings__App` environment variable); do not commit secrets.
@@ -59,3 +59,7 @@ Cleanup is automatic: the fixture disposes the container, and the Testcontainers
 ## Architecture tests
 
 `tests/Architecture.Tests` enforces AD-1 and AD-2 with ArchUnitNET: the `src` project reference graph (read from the `.csproj` files), type dependencies pointing only downwards (People, Leave, Audit, BuildingBlocks) and across modules only into `LeaveWorkforce.<Module>.Contracts`, only `Contracts` types being public in a module, `DbContext` types being internal and unused outside their module, and `LeaveWorkforce.<Name>` assembly and namespace naming. Each rule is a function in `ArchitectureRules` that is also run on deliberately bad fixture types (`Fixtures/`) to prove it can fail. The top-level `Program` entry point of the two hosts is exempt from the namespace rule because the compiler places it in the global namespace.
+
+## Concurrency tests
+
+`tests/Concurrency.Tests` needs Docker like the integration tests (same `DOCKER_HOST` note) and reuses `PostgresFixture` through its own `Concurrency` collection. `ParallelRunner.RunAsync(operations, timeout, ct)` creates every operation, releases them together through one start gate, and returns one `Outcome<T>` per operation in order: the value, the exception, or `TimedOut` (default 30 seconds; still-running operations are cancelled). It does not throw because an operation failed or hung. Scratch tables are created by `migrator`, used by `app_rw` and dropped afterwards.
