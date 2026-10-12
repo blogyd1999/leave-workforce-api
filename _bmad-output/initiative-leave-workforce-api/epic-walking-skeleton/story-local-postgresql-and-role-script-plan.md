@@ -3,7 +3,7 @@ title: 'Local PostgreSQL and role script'
 type: 'chore'
 ticket: '2'
 created: '2026-10-12'
-status: 'built'
+status: done
 baseline_revision: 'a9ec6111ad1574d7fffd3d3d2917e0850153e628'
 route: 'full'
 route_source: 'auto'

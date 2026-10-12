@@ -3,7 +3,7 @@ title: 'Unit-of-work pipeline, advisory locks and paging'
 type: 'feature'
 ticket: '5'
 created: '2026-10-12'
-status: 'built'
+status: done
 baseline_revision: '24566e338debef1170ddedf9a06ce6c1ff121085'
 route: 'full'
 route_source: 'auto'

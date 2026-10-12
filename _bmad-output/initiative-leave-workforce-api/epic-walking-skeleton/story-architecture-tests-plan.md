@@ -3,7 +3,7 @@ title: 'Architecture tests'
 type: 'chore'
 ticket: '6'
 created: '2026-10-12'
-status: 'built'
+status: done
 baseline_revision: '9e31f6bd95d98ea46e2b0bab71e9d47cb00bb3c5'
 route: 'full'
 route_source: 'auto'

@@ -3,7 +3,7 @@ title: 'Concurrency test harness'
 type: 'chore'
 ticket: '7'
 created: '2026-10-12'
-status: 'built'
+status: done
 baseline_revision: '079f8a8d320025ebb9a4079566ae4146556219c1'
 route: 'full'
 route_source: 'auto'

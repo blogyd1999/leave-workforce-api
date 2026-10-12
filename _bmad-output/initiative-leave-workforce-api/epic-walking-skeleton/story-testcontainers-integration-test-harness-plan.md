@@ -3,7 +3,7 @@ title: 'Testcontainers integration-test harness'
 type: 'chore'
 ticket: '3'
 created: '2026-10-12'
-status: 'built'
+status: done
 baseline_revision: '89222f3c6f122ff7e7e23051044b59a3c489166c'
 route: 'full'
 route_source: 'auto'

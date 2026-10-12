@@ -3,7 +3,7 @@ title: 'Solution scaffold with a health endpoint'
 type: 'chore'
 ticket: '1'
 created: '2026-10-12'
-status: 'built'
+status: done
 baseline_revision: 'd799de177d9de9b3924c8cb5c4a4d23f2cf3db90'
 route: 'full'
 route_source: 'auto'

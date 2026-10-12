@@ -3,7 +3,7 @@ title: 'Result, Error and the SEC-11 ProblemDetails mapper'
 type: 'feature'
 ticket: '4'
 created: '2026-10-12'
-status: 'built'
+status: done
 baseline_revision: 'd37941fcd6f8596d314cb0d1c01dd03d0763cbcf'
 route: 'full'
 route_source: 'auto'
