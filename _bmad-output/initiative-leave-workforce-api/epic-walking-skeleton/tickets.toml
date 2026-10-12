@@ -65,7 +65,6 @@ covers = ["R4"]
 after = [1]
 hitl = false
 risk = "low"
-unknown = "Which architecture-test library to use, NetArchTest or ArchUnitNET."
 
 [[entry]]
 id = 7

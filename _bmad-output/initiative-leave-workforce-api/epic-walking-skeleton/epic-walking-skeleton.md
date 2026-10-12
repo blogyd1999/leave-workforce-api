@@ -51,4 +51,4 @@ The repository scaffold, local database, test harnesses and BuildingBlocks. Not 
 - Decision: no CI pipeline in this epic; it is deferred in the architecture (2026-10-12).
 - Tracer bullet: entry 1, the project shells and the health endpoint through to a running Api.
 - Decision: sequencing is 1 and 2 first, then 3 after both, 4 and 6 after 1, 5 after 3 and 4, and 7 after 3 (2026-10-12).
-- Unknown: which architecture-test library to use (NetArchTest or ArchUnitNET); entry 6 waits on it.
+- Decision: the architecture-test library is ArchUnitNET (human's decision, 2026-10-12); entry 6 uses it.
