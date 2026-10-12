@@ -39,3 +39,11 @@ Connection string example, with the password taken from the environment:
 set -a; . deploy/db/dev.env; set +a   # loads the values below into your shell
 export ConnectionStrings__App="Host=127.0.0.1;Port=$POSTGRES_PORT;Database=$POSTGRES_DB;Username=app_rw;Password=$APP_RW_PASSWORD"
 ```
+
+## Integration tests
+
+`dotnet test --project tests/Api.IntegrationTests` needs a running Docker daemon; there is no skip when it is missing, the tests fail with a message saying so. With Colima, set `DOCKER_HOST=unix://$HOME/.colima/docker.sock` (Testcontainers honours it).
+
+The `PostgresFixture` (one per `Postgres` collection) starts a disposable container from the image pinned in `deploy/postgres.env`, applies the unchanged `deploy/db/roles.sql` with `psql` inside the container, and exposes connection strings for the superuser and the three roles over the mapped TCP port. Every password is random per run and is never printed. `ApiFactory` is a `WebApplicationFactory<Program>` that sets `ConnectionStrings:App` to the `app_rw` connection string. Both types are public so `Concurrency.Tests` can use them.
+
+Cleanup is automatic: the fixture disposes the container, and the Testcontainers reaper (Ryuk) removes it even if the test process is killed. Check with `docker ps -a --filter label=org.testcontainers=true`; only the long-lived Ryuk container itself may remain, and it removes itself when idle.
