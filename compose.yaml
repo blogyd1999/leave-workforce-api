@@ -1,0 +1,39 @@
+name: leave-workforce
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:?set in deploy/postgres.env}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set in deploy/db/dev.env}
+      POSTGRES_USER: ${POSTGRES_USER:?set in deploy/db/dev.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in deploy/db/dev.env}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  # One-shot: applies roles.sql with plain psql once the database is healthy.
+  db-roles:
+    image: ${POSTGRES_IMAGE:?set in deploy/postgres.env}
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGDATABASE: ${POSTGRES_DB:?}
+      PGUSER: ${POSTGRES_USER:?}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?}
+      MIGRATOR_PASSWORD: ${MIGRATOR_PASSWORD:?}
+      APP_RW_PASSWORD: ${APP_RW_PASSWORD:?}
+      RETENTION_JOB_PASSWORD: ${RETENTION_JOB_PASSWORD:?}
+    volumes:
+      - ./deploy/db/roles.sql:/roles.sql:ro
+    entrypoint: ["psql", "-v", "ON_ERROR_STOP=1", "-f", "/roles.sql"]
+
+volumes:
+  pgdata:

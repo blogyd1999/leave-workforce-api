@@ -9,3 +9,6 @@ obj/
 .idea/
 TestResults/
 *.log
+
+# Local database credentials
+deploy/db/dev.env
