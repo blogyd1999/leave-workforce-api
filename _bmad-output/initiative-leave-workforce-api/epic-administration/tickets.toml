@@ -1,0 +1,123 @@
+# Breakdown for epic-administration; the order of the tables is the build order.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Create Account endpoint, Account list and lookup"
+description = "Adds the Administrator-only create endpoint, extending the People account service from epic 2 entry 3, creates the manager_links table (unique employee_id, CHECK employee_id <> manager_id), and calls the internal handler with the duplicate-email, self-manager, length-limit, tree-lock and active-manager rules and a zero balance, plus the Account list and lookup by id."
+verify = "Creating returns an Awaiting Password Account with a zero balance and no credential, a duplicate email returns 409, an over-100-character name returns 400, creating an Account with yourself as its manager returns 403, and a non-Administrator receives 403 on create, list and lookup."
+covers = ["FR-1", "FR-6", "SEC-12"]
+after = ["2.3", "2.7", "2.12"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Assign and reassign a Direct Manager; Direct Report list"
+description = "Adds manager assignment with the tree lock, cycle refusal, active-manager check and the self-assignment and own-manager guards, People's IRelationshipDirectory implementation, a call to the recording MovePending, and the caller's Direct Report list."
+verify = "A cycle or inactive manager returns 409, assigning yourself as another Employee's manager returns 403, a change is audited with old and new manager and the MovePending call is recorded, and a Manager sees only their own Direct Reports."
+covers = ["FR-3", "FR-6", "SEC-10", "SEC-12"]
+after = [1]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Clear a Direct Manager"
+description = "Adds clearing with a mandatory reason of at most 500 characters and the own-manager guard, calling the recording CancelPendingFor with the reason \"manager cleared\" and leaving a Top-Most Person."
+verify = "Clearing needs a reason, clearing your own manager returns 403, the CancelPendingFor call is recorded with that reason, and the change is audited."
+covers = ["FR-3"]
+after = [2]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Administrator window and the first direct grant"
+description = "Adds the one-way people.admin_window table with its seed row, the single direct create-with-role or grant under the administrator advisory lock, and extends entry 1's create endpoint with the role flag; the account service holds the window logic."
+verify = "A second direct grant after the window closes returns 403, the window closes in the same transaction as the second Administrator, and two concurrent attempts succeed once."
+covers = ["FR-1", "FR-5", "FR-31", "SEC-12"]
+after = [1, 3]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Role removal and the last-Administrator rule"
+description = "Adds Administrator role removal, the last-Administrator check under the administrator lock, and the self-change guards, all inside the account service."
+verify = "The last Administrator cannot lose the role (409), changing your own role returns 403, and mutual removal by two Administrators leaves one."
+covers = ["FR-5", "SEC-12"]
+after = [4]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Deactivate and reactivate an Account"
+description = "Adds deactivation with the active-Direct-Report refusal and count, the last-Administrator and self-deactivation rules, session end, voiding of Temporary Passwords and Must-Change Sessions, a call to the recording CancelPendingFor with the reason \"account deactivated\", and rollback on failure, plus reactivation back to Awaiting Password with the active-manager check; deactivating or reactivating another Administrator is a Security-Class event (limitation L-9)."
+verify = "Deactivation with active reports returns 409 with the count, ends sessions and is audited, deactivating yourself returns 403, and reactivation is refused while the manager is inactive."
+covers = ["FR-4", "SEC-12"]
+after = [2, 3, 5]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 7
+type = "story"
+title = "Ordinary password reset"
+description = "Adds the reset for active non-Administrator Accounts with the restricted targets, voiding a live Temporary Password and any Must-Change Session, ending sessions and refresh tokens, clearing throttle state through epic 2 entry 11, and returning the Account to Awaiting Password."
+verify = "Resetting yourself, an Administrator or your own Direct Manager returns 403, a non-Administrator caller returns 403, a deactivated target returns 409, no password is returned, throttle state is cleared and the reset is audited."
+covers = ["FR-28"]
+after = [1, "2.9", "2.11"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 8
+type = "story"
+title = "Privileged Requests"
+description = "Adds creating, listing, reading, approving and rejecting Privileged Requests with distinct Initiator, Approver and target, the CHECK constraint, 24-hour expiry with the Api sweeper, and a grant that goes through the account service so the window closes."
+verify = "Self-approval and target approval return 403, an expired or reused request returns 409, a missing request returns 404, a changed Initiator or target at approval returns 409, and approval grants the role atomically."
+covers = ["FR-31"]
+after = [5]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 9
+type = "story"
+title = "recover-admin: reactivate and restore role"
+description = "Extends epic 2's recover-admin with the optional reactivation (subject to the active-manager check) and restoring the Administrator role to an Account that previously held it, leaving the window unchanged."
+verify = "With the option set, a deactivated Administrator is reactivated and a removed role restored, both audited with the reason, and an inactive manager returns 409."
+covers = ["FR-29"]
+after = [5, 6, "2.14"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 10
+type = "story"
+title = "Concurrency tests for administration races"
+description = "Adds stress tests for deactivate versus reassign, assigning a manager versus deactivating that manager, reactivation versus deactivating the Employee's manager, mutual role removal and mutual deactivation of Administrators, window use, concurrent approvals, and a Privileged Request versus a change to its Initiator or target."
+verify = "After the parallel run at least one active Administrator remains, every active Employee's manager is active or absent, there is no reporting cycle, and no Privileged Request has equal Initiator and Approver."
+covers = ["FR-3", "FR-4", "FR-5", "FR-31"]
+after = [2, 3, 4, 5, 6, 8]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 11
+type = "story"
+title = "Refactor sweep"
+description = "Cleans up what the epic's plans and review findings deferred; scope is set when it starts."
+verify = "`dotnet build` and all tests pass and each deferred item is closed or recorded."
+covers = []
+after = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+hitl = false
+risk = "low"
+

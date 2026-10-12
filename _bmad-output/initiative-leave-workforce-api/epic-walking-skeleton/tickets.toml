@@ -1,0 +1,91 @@
+# Breakdown for epic-walking-skeleton; the order of the tables is the build order.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Solution scaffold with a health endpoint"
+description = "Creates the solution, central package management, pinned SDK, the six `LeaveWorkforce.<Module>` source project shells and the three empty test project shells with the spine's reference graph, and an Api that exposes `Program` to tests, reads its connection string from the `ConnectionStrings:App` key, and serves a minimal health endpoint."
+verify = "`dotnet build` succeeds from a clean checkout and `GET /health` returns up from `dotnet run`."
+covers = ["R1"]
+after = []
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Local PostgreSQL and role script"
+description = "Adds the compose file pinning the `postgres:18` image once in `deploy/postgres.env`, which compose and the test fixture both read, and `deploy/db/roles.sql` creating migrator, app_rw and retention_job with passwords from environment variables, and default privileges for schemas that later migrations create."
+verify = "After `docker compose up`, `SHOW server_version` begins with 18, each of the three roles connects, and app_rw cannot create objects."
+covers = ["R2"]
+after = []
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Testcontainers integration-test harness"
+description = "Adds the shared PostgreSQL container fixture in Api.IntegrationTests (reading the image tag from `deploy/postgres.env`, and applying `deploy/db/roles.sql` to the container), a WebApplicationFactory that sets `ConnectionStrings:App`, and makes the fixture project referenceable by Concurrency.Tests."
+verify = "An integration test starts a container whose `server_version` begins with 18, calls `/health` through the factory and passes."
+covers = ["R3"]
+after = [1, 2]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Result, Error and the SEC-11 ProblemDetails mapper"
+description = "Adds Result with the error kinds and one mapper to ProblemDetails with a stable code and the status codes of SEC-11, including 409 for lock timeout."
+verify = "Unit tests show each error kind maps to its status code and code, and no response carries a stack trace."
+covers = ["R6"]
+after = [1]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Unit-of-work pipeline, advisory locks and paging"
+description = "Adds the request pipeline that begins and commits the unit of work, rolls back on a failure Result, re-runs the handler once on SQLSTATE 23505, 23P01, 40001, 40P01 or 55P03 and maps the final 55P03 to 409, plus the advisory-lock helper and paging; the CommitOnFailure flag and the audit flush hook are added by epic 2 entry 1."
+verify = "Using a test-only DbContext, a failed handler rolls back, a retryable failure is retried once, two connections serialise on one advisory key, and page size defaults to 25 and caps at 100."
+covers = ["R6"]
+after = [3, 4]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Architecture tests"
+description = "Adds Architecture.Tests enforcing the reference graph, `LeaveWorkforce.<Module>` naming, public surface and DbContext containment from AD-1 and AD-2."
+verify = "The suite passes on the scaffold and fails when a test fixture project adds a forbidden reference."
+covers = ["R4"]
+after = [1]
+hitl = false
+risk = "low"
+unknown = "Which architecture-test library to use, NetArchTest or ArchUnitNET."
+
+[[entry]]
+id = 7
+type = "story"
+title = "Concurrency test harness"
+description = "Adds Concurrency.Tests with a helper that runs parallel operations against the shared container fixture from entry 3."
+verify = "A sample test runs two parallel tasks against PostgreSQL and the helper reports both outcomes."
+covers = ["R5"]
+after = [3]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 8
+type = "story"
+title = "Refactor sweep"
+description = "Cleans up what the epic's plans and review findings deferred; scope is set when it starts."
+verify = "`dotnet build` and all tests pass and each deferred item is closed or recorded."
+covers = []
+after = [1, 2, 3, 4, 5, 6, 7]
+hitl = false
+risk = "low"
+

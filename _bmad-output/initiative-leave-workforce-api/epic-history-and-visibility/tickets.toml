@@ -1,0 +1,57 @@
+# Breakdown for epic-history-and-visibility; the order of the tables is the build order.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Employee leave history"
+description = "Adds the Employee's paged own-request list with status and date filters, newest first, the Employee's name, and status history from the leave_requests columns, reusing epic 5 entry 5's status fields; owns the shared history query and DTO."
+verify = "The result never contains another Employee's requests, is newest first, filters by status and dates, pages default to 25 and cap at 100, and status history shows times and actors."
+covers = ["FR-22", "SEC-9"]
+after = ["5.4", "5.5", "5.6", "6.2", "6.3"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Manager view of report history"
+description = "Adds the Manager's history for current Direct Reports, reusing the shared query and epic 6's Direct Report query, and the former-Decider visibility without balances."
+verify = "Deactivated reports appear with names, a former manager sees only requests they decided and no balance, a reassigned Employee's other requests are hidden from them, and others get 404."
+covers = ["FR-23", "SEC-10"]
+after = [1, "6.1"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Administrator read-only view, audited"
+description = "Adds the Administrator's read of any Employee's requests with one Ordinary audit record per call (target, filters, result count) using the audited-read helper from epic 4 entry 4, also writing that record when an Administrator reads another Employee's request through epic 5 entry 5's single-request view, and no decision operations."
+verify = "Each read writes one audit record, and a non-Administrator receives 403."
+covers = ["FR-24"]
+after = [1, "4.4"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Visibility test matrix"
+description = "Adds integration tests of each history endpoint across Employee, Manager, former Manager, Administrator, and an Administrator who is also the Direct Manager."
+verify = "The matrix passes with the 403 and 404 codes of SEC-11, no cross-Employee data and the cross-Employee 404."
+covers = ["FR-22", "FR-23", "FR-24"]
+after = [2, 3]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Refactor sweep"
+description = "Cleans up what the epic's plans and review findings deferred; scope is set when it starts."
+verify = "`dotnet build` and all tests pass and each deferred item is closed or recorded."
+covers = []
+after = [1, 2, 3, 4]
+hitl = false
+risk = "low"
+

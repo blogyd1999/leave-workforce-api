@@ -1,0 +1,190 @@
+# Breakdown for epic-first-vertical-slice; the order of the tables is the build order.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Audit module: insert-only records with hashes"
+description = "Adds the Audit module with the closed AuditActions catalogue (which later epics extend), IAuditWriter that queues and flushes just before commit, the CommitOnFailure flag in the pipeline, a narrow read contract for the last recorded configuration values, a fixture step that applies the module migrations to the test container (extended by entries 2 and 3), per-class sequence and hash under the class advisory lock, and the insert-only grants."
+verify = "A test writes concurrent records and sees consecutive seq per class and hashes that recompute from the canonical bytes of AD-12, a forced flush failure rolls the change back, and app_rw cannot UPDATE or DELETE audit rows."
+covers = ["FR-25", "SEC-19", "SEC-23"]
+after = ["1.3", "1.5"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Leave skeleton, declared contracts and ports"
+description = "Adds the Leave module, its schema and migrations, the LeaveBalance table with its CHECK constraints, ILeaveCommands with InitialiseBalance implemented and MovePending and CancelPendingFor declared as recording no-ops, and declares the ports IAccountState, IRelationshipDirectory and IAccountNames in Leave.Contracts for People to implement (the first two and the names port by entry 3, IRelationshipDirectory by epic 3 entry 2)."
+verify = "InitialiseBalance creates a Total 0 row, inserting reserved above total or a negative total is rejected by the database, and the no-op methods record their calls."
+covers = ["FR-27"]
+after = ["1.5"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 3
+type = "story"
+title = "People: accounts, credentials, hasher, CreateAccount and first adapters"
+description = "Adds the People module with Account and Credential, IPasswordHasher on Argon2id with its options, the internal CreateAccount handler that calls InitialiseBalance and audits, and People's implementations of IAccountState and IAccountNames."
+verify = "CreateAccount produces an Awaiting Password Account with a zero balance and an audit record, the hasher round-trips, and the adapters return the account lock, state and names."
+covers = ["SEC-1", "FR-27"]
+after = [1, 2, "1.4"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Password policy and common-password check"
+description = "Adds the 12 to 128 length rule checked before hashing and the rejection of common passwords against the bundled list; change-password uses it."
+verify = "A 11-character, 129-character and listed password are each refused, and a valid one passes."
+covers = ["SEC-2"]
+after = [3]
+hitl = false
+risk = "medium"
+unknown = "Which top-10,000 common-password list, and its licence, to bundle."
+
+[[entry]]
+id = 5
+type = "story"
+title = "Operator console, operator seams and migrate"
+description = "Adds the Operator host with its composition of the modules, a per-command unit of work (CommitOnFailure for audited refusals, no automatic retry), the operator-identity seam (OS user, host, label), the IInteractiveTerminal seam, and the migrate subcommand under the migrator role for People, Leave and Audit."
+verify = "`migrate` on an empty database creates the three schemas and tables, a second run changes nothing, and tests can fake the terminal check."
+covers = ["SEC-23"]
+after = [1, 2, 3]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Temporary Password and bootstrap command"
+description = "Adds Temporary Password generation and storage and the bootstrap command with the administrator advisory lock, the interactive-terminal rule and the Security-Class audit; the account service, the operator seams and the generator are reused by entries 13 and 14."
+verify = "Bootstrap on an empty database creates one Administrator and prints a password once; a repeat or concurrent run is refused and audited; redirected output is refused; the password is stored only as a hash."
+covers = ["FR-27", "FR-30", "SEC-22", "FR-2"]
+after = [3, 5]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 7
+type = "story"
+title = "Auth pipeline: tokens, sessions, CurrentAccount and policies"
+description = "Adds JWT options, issue and validation, the Session table, the CurrentAccount step, FallbackPolicy, the named policies Authenticated, Administrator and MustChangeAllowed with the self-guard helper, and owns the Api composition root that entries 8 and 15 extend."
+verify = "A token issued for a test session is accepted, an ended session, deactivated Account or demoted Administrator is refused on the next call with 401, unauthenticated calls get 401 by default, and the Administrator policy returns 403 for others."
+covers = ["SEC-3", "SEC-7", "SEC-8", "SEC-13", "SEC-24"]
+after = [3]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 8
+type = "story"
+title = "Login and the Must-Change Session"
+description = "Adds login with the generic 401 and dummy verification for unknown emails, and the Must-Change Session created by a live Temporary Password (access token only, 15 minutes, no refresh token); the unknown-email path is reused by throttling in entry 11; login success is an Ordinary audit event."
+verify = "Login returns an access token, every failure returns the same 401, a Temporary Password works once, and a Must-Change Session is refused with 403 and a stable code on any call except change-password and logout."
+covers = ["FR-2", "FR-7"]
+after = [6, 7]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 9
+type = "story"
+title = "Refresh token rotation with reuse detection"
+description = "Adds opaque refresh tokens and their table, rotation, family revocation on reuse with the CommitOnFailure flow, and the ten-second grace cache; refresh-reuse is a Security-Class audit event."
+verify = "A refresh returns a new pair, a repeat within ten seconds returns the same pair, a later reuse revokes the family and is audited, and a Must-Change Session gets no refresh token."
+covers = ["FR-8", "SEC-4"]
+after = [8]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 10
+type = "story"
+title = "Change password and logout"
+description = "Adds change-password that uses the password policy, ends other sessions and moves an Awaiting Password Account out of the Must-Change Session, and logout that ends the session; password change is a Security-Class audit event."
+verify = "A Must-Change Session returns a normal session after change, other sessions and refresh tokens end, a logged-out token is rejected on its next use, and a reused or current password is refused."
+covers = ["FR-9", "FR-10", "SEC-6"]
+after = [4, 8, 9]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 11
+type = "story"
+title = "Throttling and back-off"
+description = "Adds the persistent per-account back-off, the per-source limit and the unknown-email and global ceilings for login, change-password and refresh, with the committed-on-failure rule, and exposes a clear-throttle-state operation that entries 13 and 14 and epic 3 entry 7 call; lockout and the failed-login aggregate are audit events."
+verify = "Repeated failures on each of the three endpoints return the same 429 for known and unknown emails, the counters survive the failed request, and spoofed forwarding headers do not bypass the limit."
+covers = ["SEC-5"]
+after = [8, 9, 10]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 12
+type = "story"
+title = "Test support: account seeding, login-as-role and matrix helper"
+description = "Adds helpers in Api.IntegrationTests to seed accounts and log in as a role, and the skeleton of the table-driven authorization-matrix harness that each epic extends and epic 8 completes."
+verify = "A test seeds an Administrator, Manager and Employee, logs in as each, and runs matrix rows against a test-only endpoint asserting a 403 and a 404."
+covers = []
+after = [8, 10]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 13
+type = "story"
+title = "issue-temp-password command"
+description = "Adds the issue command with the recipient-verified confirmation, voiding of any earlier Temporary Password and Must-Change Session, throttle-state clearing and its Security-Class audit event, reusing the seams and generator from entry 6."
+verify = "Issuing twice leaves only the newer password live, the confirmation is recorded, redirected output is refused, and no secret reaches a log or audit row."
+covers = ["FR-30", "SEC-22"]
+after = [6, 8, 11]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 14
+type = "story"
+title = "recover-admin command and operator runbook"
+description = "Adds the recovery command requiring a reason of at most 500 characters, which puts the Administrator in Awaiting Password, ends sessions, clears throttle state and issues a Temporary Password through entry 13, with audited refusals, and writes `docs/operator-runbook.md` with the recovery and issuance procedures and the provisioning order."
+verify = "Recovery ends the Administrator's sessions and refresh tokens, is audited with the reason and the operator, refuses when output is redirected, and the runbook states how to verify a requester."
+covers = ["FR-29"]
+after = [6, 9, 11, 13]
+hitl = true
+risk = "high"
+
+[[entry]]
+id = 15
+type = "story"
+title = "Operator-controlled configuration and start-up audit"
+description = "Adds validated options for time zone and retention floors and the start-up Security-Class audit of effective values and changes, reading the last recorded values through the Audit read contract; JWT, throttle and Argon2 options belong to entries 7, 11 and 3."
+verify = "An invalid time zone or retention value stops start-up, a changed value is recorded at the next start, and no API changes them."
+covers = ["FR-32"]
+after = [1, 5, 7]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 16
+type = "story"
+title = "Refactor sweep"
+description = "Cleans up what the epic's plans and review findings deferred; scope is set when it starts."
+verify = "`dotnet build` and all tests pass and each deferred item is closed or recorded."
+covers = []
+after = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 17
+type = "story"
+title = "Closing slice suite"
+description = "Runs the whole slice as one test: migrate, bootstrap, issue, login with the Temporary Password, change password, refresh, logout, and a scan of responses, logs, exceptions and audit rows for secrets."
+verify = "The suite passes against a fresh database and the scan finds no password or Temporary Password."
+covers = []
+after = [16]
+hitl = false
+risk = "medium"
+

@@ -1,0 +1,90 @@
+# Breakdown for epic-leave-requests; the order of the tables is the build order.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Submit a Leave Request: table and happy path"
+description = "Creates the leave_requests table with its columns (first and last Working Day, assigned_manager_id, and the status-history columns), refuses a submit when the locked Account is inactive or being deactivated, the WorkingDays service, and the submit handler that locks the Account through IAccountState, then the balance, reserves days, assigns the Direct Manager through IRelationshipDirectory and audits."
+verify = "Submitting Monday to Friday reserves 5 days, status is Pending, Available falls by 5, the Direct Manager is assigned, and an audit record exists."
+covers = ["FR-14"]
+after = ["3.2", "4.2", "2.3", "2.2"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Submit refusals, bounds and ordering"
+description = "Adds the date format and end-before-start 400s, note length 400, the Today and First Working Day rule in the Company Time Zone as a shared helper that epic 6 entry 2 reuses, weekend-only, span and horizon bounds, no or inactive manager, insufficient balance with the shortfall named, and the stated 409 order."
+verify = "Each refusal returns its code in the specified order, including a weekend-only range, a missing Direct Manager and a shortfall that names the missing days."
+covers = ["FR-14"]
+after = [1, "2.15"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Overlap prevention"
+description = "Adds the ordered overlap pre-check before the balance refusal, the exclusion constraint on first and last Working Day for Pending and Approved requests as backstop, and the mapping of its violation to 409 naming the conflict."
+verify = "Wednesday to Friday then Saturday to Tuesday is allowed, any shared Working Day is refused before a balance refusal, and a concurrent overlapping pair cannot both succeed."
+covers = ["FR-15"]
+after = [2]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Cancel a Pending request and the Request Reader rule"
+description = "Adds cancellation by the owner under the Account, balance, request lock order, which still works after the First Working Day has passed and follows the lost-race rule of SEC-11, with the audit record, and owns the Request Reader helper with the 403 and 404 rules for other callers."
+verify = "Cancel releases the days and is audited, cancelling a non-Pending request returns 409, an Administrator or Direct Manager receives 403, and a non-reader receives 404."
+covers = ["FR-16"]
+after = [1]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Track and view a request"
+description = "Adds the single-request view for Request Readers showing status, decision time, rejection reason, the Direct Manager's name, and the Decider once decided (decided requests are exercised in epic 6)."
+verify = "The owner sees status, decision time and rejection reason, a non-reader gets 404 identical to a nonexistent request, and no other manager data appears."
+covers = ["FR-17", "SEC-9"]
+after = [4]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Pending-request side effects: MovePending and CancelPendingFor"
+description = "Replaces epic 3's recording no-ops with the real commands, keeping the AD-24 signatures, taking locks inside the caller's transaction, writing cancelled_at, cancelled_by and cancel_reason, auditing each cancellation and each moved request, and using the literal reasons \"manager cleared\" and \"account deactivated\"; it delivers only the request side effects of FR-3 and FR-4."
+verify = "Reassigning a manager moves Pending requests, and clearing or deactivating cancels them with those reasons, released days and a leave_request.cancelled audit record per request."
+covers = ["FR-3", "FR-4"]
+after = [1, 4, "3.3", "3.6"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 7
+type = "story"
+title = "Concurrency tests for requests"
+description = "Adds stress tests for submit versus submit, submit versus deactivation, submit versus manager clearing, cancel versus cancel, cancel versus CancelPendingFor and cancel versus manager reassignment."
+verify = "After the parallel run Reserved equals the sum of Pending requested days, and no overlap or over-balance request exists."
+covers = ["FR-14", "FR-15", "FR-16"]
+after = [2, 3, 4, 6]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 8
+type = "story"
+title = "Refactor sweep"
+description = "Cleans up what the epic's plans and review findings deferred; scope is set when it starts."
+verify = "`dotnet build` and all tests pass and each deferred item is closed or recorded."
+covers = []
+after = [1, 2, 3, 4, 5, 6, 7]
+hitl = false
+risk = "low"
+

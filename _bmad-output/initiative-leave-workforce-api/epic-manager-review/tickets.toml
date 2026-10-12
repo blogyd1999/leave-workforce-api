@@ -1,0 +1,68 @@
+# Breakdown for epic-manager-review; the order of the tables is the build order.
+
+[[entry]]
+id = 1
+type = "story"
+title = "List requests to review"
+description = "Adds the Manager's list of Direct Reports' requests with status filter, the Employee's name, dates, Requested Days, note and the Employee's Available days; owns the Direct Report query that epic 7 entry 2 reuses."
+verify = "A Manager sees only current Direct Reports' requests with those fields, and a caller with no reports gets an empty list."
+covers = ["FR-18", "SEC-10", "FR-13"]
+after = ["5.1", "4.1"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Approve a request"
+description = "Adds approval that takes the lock order Account through IAccountState, balance, then request, allows only the current Direct Manager through the Request Reader helper, moves Reserved into Total, applies the First Working Day rule shared with epic 5 entry 2, records the decision columns and Decider, and audits."
+verify = "Approval reduces Total and Reserved equally, leaves Available unchanged, a past First Working Day or non-Pending request returns 409, a non-manager caller is refused, and the audit record exists."
+covers = ["FR-19", "SEC-10"]
+after = ["5.2", "5.4"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Reject a request"
+description = "Adds rejection after entry 2 on the same decision path: only the current Direct Manager, a mandatory reason of at most 500 characters checked after authorization, release of the Reservation as cancel does, decision columns and audit."
+verify = "A blank or over-500-character reason returns 400 only after authorization, rejection releases the days and still works after the First Working Day has passed, a non-Pending request returns 409, and the Employee sees the reason."
+covers = ["FR-20"]
+after = [2, "5.4"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Decision authority and response codes"
+description = "Completes the Request Reader response matrix for decision calls and the race-loser behaviour so every caller class gets the SEC-11 code."
+verify = "Owner and Administrator get 403, non-readers get 404, a former manager who decided gets 403, a lost race returns 409 only for the entitled caller, and the matrix rows are added to the epic 2 harness."
+covers = ["FR-21", "SEC-10", "SEC-11"]
+after = [3]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Concurrency tests for decisions"
+description = "Adds stress tests for approve versus cancel, approve versus reject, reject versus cancel, approve versus reassignment or deactivation, and double approval."
+verify = "After the parallel run each request has one outcome and Reserved equals the sum of Pending requested days."
+covers = ["FR-19", "FR-21"]
+after = [4, "5.4", "5.6"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Refactor sweep"
+description = "Cleans up what the epic's plans and review findings deferred; scope is set when it starts."
+verify = "`dotnet build` and all tests pass and each deferred item is closed or recorded."
+covers = []
+after = [1, 2, 3, 4, 5]
+hitl = false
+risk = "low"
+

@@ -1,0 +1,101 @@
+# Breakdown for epic-hardening-and-audit; the order of the tables is the build order.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Audit query endpoint"
+description = "Adds the Administrator-only paged audit query by target, actor, action and time, registers the query action in the AuditActions catalogue, and audits the query with its parameters."
+verify = "A non-Administrator gets 403, results are paged, and each query writes an audit record with its parameters and not its results."
+covers = ["FR-26"]
+after = ["2.1", "2.7"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Audit event completeness and rollback"
+description = "Adds tests that every event in FR-25 except the purge produces a record with actor and time, that records carry no secret, and that a failed audit flush rolls back the business change."
+verify = "One test per event passes, a scan of audit rows finds no password, token or token hash, and forcing a flush failure leaves the business data unchanged."
+covers = ["FR-25", "SEC-19"]
+after = [1, "7.4"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Audit purge, anchors and verification"
+description = "Creates chain_anchors and the retention_job grants, and adds purge-audit under that role and verify-audit; the purge writes its Security-Class summary."
+verify = "Purge removes only old prefixes and never the head, verification passes after a purge, an edited record fails verification, and the purge summary is recorded."
+covers = ["SEC-23", "FR-25"]
+after = ["2.1", "2.5", "2.15"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Authorization matrix across all endpoints"
+description = "Completes the table-driven suite from epic 2 over every endpoint, role and own, report and foreign resource, plus self-dealing, restricted-target and next-call refusal of deactivated or demoted callers."
+verify = "Every cell returns the SEC-11 code, no cross-boundary data is readable, and a deactivated or demoted caller is refused on the next call."
+covers = ["SEC-7", "SEC-8", "SEC-9", "SEC-10", "SEC-11", "SEC-12", "SEC-13"]
+after = ["7.4", 1, "2.12"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 5
+type = "story"
+title = "API hardening checks"
+description = "Verifies and fills gaps in HTTPS redirection and HSTS, secure headers, CORS origins, secrets only from configuration, error bodies without internals, the build-time OpenAPI artifact and its run-time gating, minimal health, validated input models and non-guessable ids."
+verify = "Responses carry the secure headers, no secret is in source or config files, error bodies contain no stack or SQL, the OpenAPI file is produced at build and gated at run time, health returns only up or down, identifiers are random UUID v4 with no sequential pattern, and mass-assignment attempts change nothing."
+covers = ["SEC-14", "SEC-15", "SEC-16", "SEC-17", "SEC-18"]
+after = ["7.4"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Log, response and audit leak scan"
+description = "Adds tests that capture logs, responses and audit rows across the journeys and assert no password, token or personal data appears."
+verify = "The scan finds no secret anywhere and no name or email in logs."
+covers = ["SEC-20", "SEC-21"]
+after = ["7.4"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 7
+type = "story"
+title = "Concurrency stress suite for the remaining PRD races"
+description = "Extends the concurrency project to the PRD section 6 races not covered in epics 3, 5 and 6 (concurrent reassignments forming a cycle, Temporary Password login versus reissue or reset, adjustment versus approval), sets the iteration and parallelism counts, and checks the SM-2 invariants with database queries."
+verify = "After the parallel runs every invariant query returns clean at the stated counts."
+covers = []
+after = ["7.4"]
+hitl = false
+risk = "high"
+
+[[entry]]
+id = 8
+type = "story"
+title = "Refactor sweep"
+description = "Cleans up what the epic's plans and review findings deferred; scope is set when it starts."
+verify = "`dotnet build` and all tests pass and each deferred item is closed or recorded."
+covers = []
+after = [1, 2, 3, 4, 5, 6, 7]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 9
+type = "story"
+title = "Closing end-to-end suite"
+description = "Runs UJ-1 to UJ-8 through the API and the Operator commands (using the terminal seam) in one suite."
+verify = "All eight journeys pass in one run against a fresh database."
+covers = []
+after = [8]
+hitl = false
+risk = "medium"
+

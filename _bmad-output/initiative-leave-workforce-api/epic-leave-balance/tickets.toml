@@ -1,0 +1,68 @@
+# Breakdown for epic-leave-balance; the order of the tables is the build order.
+
+[[entry]]
+id = 1
+type = "story"
+title = "View own balance"
+description = "Adds the Employee's own-only balance endpoint (it takes no id) returning Total, Reserved and Available, with zeros before one is set."
+verify = "An Employee sees Available equal to Total minus Reserved, sees zeros before a balance is set, and a Manager has no way to read a report's balance through it."
+covers = ["FR-13", "SEC-9"]
+after = ["2.2", "2.7", "2.12"]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Set the opening balance"
+description = "Adds the Administrator-only set operation, locking the Account through IAccountState and then the balance, allowed once through a persisted flag, with bounds, reason, self-guard, a catalogue audit action and serialisation with adjust."
+verify = "A second set returns 409, an over-1000 value returns 400, setting your own balance returns 403, an unknown or inactive target is refused, and the audit record carries actor, value and reason."
+covers = ["FR-11"]
+after = [1, "2.3"]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Adjust a balance"
+description = "Adds signed-delta adjustment under the balance lock, refusing Total below Reserved, with bounds, self-guard, mandatory reason and before and after audit."
+verify = "An adjustment below Reserved returns 409, a delta or resulting Total over 1000 returns 400, a missing reason returns 400, and the audit record has before, after and reason."
+covers = ["FR-12"]
+after = [2]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Administrator views any Employee's balance"
+description = "Adds the Administrator read of another Employee's balance, writing one Ordinary audit record per call."
+verify = "Each call writes one audit record with the target, a non-Administrator receives 403, and a Manager reading a report's balance receives 403."
+covers = ["FR-13"]
+after = [1]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Concurrency tests for balance operations"
+description = "Adds stress tests for set versus adjust, adjust versus adjust and set versus set."
+verify = "After the parallel run no update is lost and Total is never below Reserved or negative."
+covers = ["FR-11", "FR-12"]
+after = [3]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Refactor sweep"
+description = "Cleans up what the epic's plans and review findings deferred; scope is set when it starts."
+verify = "`dotnet build` and all tests pass and each deferred item is closed or recorded."
+covers = []
+after = [1, 2, 3, 4, 5]
+hitl = false
+risk = "low"
+

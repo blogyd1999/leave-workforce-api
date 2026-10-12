@@ -1,0 +1,57 @@
+# The initiative's epics in build order.
+
+[[epic]]
+id = 1
+slug = "epic-walking-skeleton"
+title = "A developer can build, run and verify the system locally"
+covers = ["CAP-13"]
+
+[[epic]]
+id = 2
+slug = "epic-first-vertical-slice"
+title = "A person can be bootstrapped, issued a password and sign in"
+covers = ["CAP-1", "CAP-2", "CAP-12", "CAP-10", "CAP-11"]
+after = [{ epic = 1, needs = "the scaffold, test harnesses, unit-of-work pipeline and ProblemDetails mapper" }]
+
+[[epic]]
+id = 3
+slug = "epic-administration"
+title = "Administrators run accounts, managers and Administrator roles"
+covers = ["CAP-3", "CAP-4", "CAP-5", "CAP-1"]
+after = [{ epic = 2, needs = "the auth pipeline and Administrator policy, People accounts and CreateAccount, the audit writer, the Leave contracts and ports, and the test support" }]
+
+[[epic]]
+id = 4
+slug = "epic-leave-balance"
+title = "Employees see and Administrators manage leave balances"
+covers = ["CAP-6"]
+after = [{ epic = 2, needs = "the Leave skeleton and balance table, the auth pipeline with the Administrator policy, the audit writer and the test support" }]
+
+[[epic]]
+id = 5
+slug = "epic-leave-requests"
+title = "Employees submit, cancel and track leave requests"
+covers = ["CAP-7", "CAP-3", "CAP-5"]
+after = [{ epic = 2, needs = "the Leave skeleton, ports and auth pipeline" }, { epic = 3, needs = "manager links, the Direct Report data and the recording side-effect calls" }, { epic = 4, needs = "balance rows with the opening balance set" }]
+
+[[epic]]
+id = 6
+slug = "epic-manager-review"
+title = "Managers approve and reject their reports' requests"
+covers = ["CAP-8", "CAP-6"]
+after = [{ epic = 4, needs = "balances and Available days" }, { epic = 5, needs = "request submission, the Request Reader rule and cancel" }]
+
+[[epic]]
+id = 7
+slug = "epic-history-and-visibility"
+title = "People see exactly the leave history they are entitled to"
+covers = ["CAP-9"]
+after = [{ epic = 4, needs = "audited Administrator reads" }, { epic = 5, needs = "the single-request view and cancelled requests" }, { epic = 6, needs = "decisions and the Decider on requests" }]
+
+[[epic]]
+id = 8
+slug = "epic-hardening-and-audit"
+title = "The system is audited, hardened and verified end to end"
+covers = ["CAP-10", "CAP-11"]
+after = [{ epic = 2, needs = "the audit writer, auth pipeline with the Administrator policy, and the test support helpers" }, { epic = 7, needs = "all feature endpoints in place" }]
+
