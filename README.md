@@ -47,3 +47,11 @@ export ConnectionStrings__App="Host=127.0.0.1;Port=$POSTGRES_PORT;Database=$POST
 The `PostgresFixture` (one per `Postgres` collection) starts a disposable container from the image pinned in `deploy/postgres.env`, applies the unchanged `deploy/db/roles.sql` with `psql` inside the container, and exposes connection strings for the superuser and the three roles over the mapped TCP port. Every password is random per run and is never printed. `ApiFactory` is a `WebApplicationFactory<Program>` that sets `ConnectionStrings:App` to the `app_rw` connection string. Both types are public so `Concurrency.Tests` can use them.
 
 Cleanup is automatic: the fixture disposes the container, and the Testcontainers reaper (Ryuk) removes it even if the test process is killed. Check with `docker ps -a --filter label=org.testcontainers=true`; only the long-lived Ryuk container itself may remain, and it removes itself when idle.
+
+## Unit of work, advisory locks and paging
+
+`BuildingBlocks` holds the request pipeline pieces (AD-3, AD-4, AD-18, AD-22). `UnitOfWorkRunner.ExecuteAsync` opens one connection and one READ COMMITTED transaction with `SET LOCAL lock_timeout` (`UnitOfWorkOptions.LockTimeout`, default 5 seconds), runs the handler, and commits only on a success `Result`; a failure `Result` or exception rolls back. On SQLSTATE 23505, 23P01, 40001, 40P01 or 55P03 (anywhere in the exception chain) the handler is re-run once in a fresh transaction; a second failure returns a Conflict (`lock_timeout` for 55P03, otherwise `concurrency_conflict`). A handler enlists an EF Core `DbContext` with `scope.EnlistAsync(context, ct)` and never commits.
+
+`scope.Locks.AcquireAsync(ct, keys)` takes `pg_advisory_xact_lock` on `AdvisoryLockKey` values in the fixed order Administrator, then Tree. Re-taking a held key is harmless; asking for a lower key after a higher one, or locking outside an active unit of work, throws `InvalidOperationException`. Locks end with the transaction.
+
+`PageRequest.Create(page, pageSize)` defaults to page 1, size 25, caps size at 100, and returns a Validation error for a page or size below 1. `Paged<T>` serialises as `{ "items": [...], "total": n }`.
