@@ -9,7 +9,7 @@ Requires the .NET SDK pinned in `global.json` (10.0.103).
 dotnet build LeaveWorkforce.slnx
 dotnet run --project src/Api --urls http://127.0.0.1:5199
 curl -i http://127.0.0.1:5199/health   # 200 {"status":"up"}
-dotnet test --solution LeaveWorkforce.slnx   # exits 8 ("zero tests") until Architecture.Tests and Concurrency.Tests gain tests in entries 1.6 and 1.7
+dotnet test --solution LeaveWorkforce.slnx   # exits 8 ("zero tests") until Concurrency.Tests gains tests in entry 1.7
 ```
 
 The connection string is read from `ConnectionStrings:App` (for example the `ConnectionStrings__App` environment variable); do not commit secrets.
@@ -55,3 +55,7 @@ Cleanup is automatic: the fixture disposes the container, and the Testcontainers
 `scope.Locks.AcquireAsync(ct, keys)` takes `pg_advisory_xact_lock` on `AdvisoryLockKey` values in the fixed order Administrator, then Tree. Re-taking a held key is harmless; asking for a lower key after a higher one, or locking outside an active unit of work, throws `InvalidOperationException`. Locks end with the transaction.
 
 `PageRequest.Create(page, pageSize)` defaults to page 1, size 25, caps size at 100, and returns a Validation error for a page or size below 1. `Paged<T>` serialises as `{ "items": [...], "total": n }`.
+
+## Architecture tests
+
+`tests/Architecture.Tests` enforces AD-1 and AD-2 with ArchUnitNET: the `src` project reference graph (read from the `.csproj` files), type dependencies pointing only downwards (People, Leave, Audit, BuildingBlocks) and across modules only into `LeaveWorkforce.<Module>.Contracts`, only `Contracts` types being public in a module, `DbContext` types being internal and unused outside their module, and `LeaveWorkforce.<Name>` assembly and namespace naming. Each rule is a function in `ArchitectureRules` that is also run on deliberately bad fixture types (`Fixtures/`) to prove it can fail. The top-level `Program` entry point of the two hosts is exempt from the namespace rule because the compiler places it in the global namespace.
