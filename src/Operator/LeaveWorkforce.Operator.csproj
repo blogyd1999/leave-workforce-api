@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\People\LeaveWorkforce.People.csproj" />
+    <ProjectReference Include="..\Leave\LeaveWorkforce.Leave.csproj" />
+    <ProjectReference Include="..\Audit\LeaveWorkforce.Audit.csproj" />
+    <ProjectReference Include="..\BuildingBlocks\LeaveWorkforce.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

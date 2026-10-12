@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Leave\LeaveWorkforce.Leave.csproj" />
+    <ProjectReference Include="..\Audit\LeaveWorkforce.Audit.csproj" />
+    <ProjectReference Include="..\BuildingBlocks\LeaveWorkforce.BuildingBlocks.csproj" />
+  </ItemGroup>
+</Project>

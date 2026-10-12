@@ -1,2 +1,11 @@
 # BMad generated render output
 _bmad/render/
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+.idea/
+TestResults/
+*.log

@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Api/LeaveWorkforce.Api.csproj" />
+    <Project Path="src/Audit/LeaveWorkforce.Audit.csproj" />
+    <Project Path="src/BuildingBlocks/LeaveWorkforce.BuildingBlocks.csproj" />
+    <Project Path="src/Leave/LeaveWorkforce.Leave.csproj" />
+    <Project Path="src/Operator/LeaveWorkforce.Operator.csproj" />
+    <Project Path="src/People/LeaveWorkforce.People.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Api.IntegrationTests/LeaveWorkforce.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Architecture.Tests/LeaveWorkforce.Architecture.Tests.csproj" />
+    <Project Path="tests/Concurrency.Tests/LeaveWorkforce.Concurrency.Tests.csproj" />
+  </Folder>
+</Solution>
