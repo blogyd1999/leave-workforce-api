@@ -12,11 +12,11 @@ curl -i http://127.0.0.1:5199/health   # 200 {"status":"up"}
 dotnet test --solution LeaveWorkforce.slnx
 ```
 
-The connection string is read from `ConnectionStrings:App` (for example the `ConnectionStrings__App` environment variable); do not commit secrets.
+The connection string will be read from `ConnectionStrings:App` (for example the `ConnectionStrings__App` environment variable); the API does not read it yet. Do not commit secrets.
 
 ## Local PostgreSQL
 
-Requires Docker with Compose v2 (Colima works). The image is pinned once in `deploy/postgres.env` (`postgres:18`). The API does not connect to the database until entry 1.3.
+Requires Docker with Compose v2 (Colima works). The image is pinned once in `deploy/postgres.env` (`postgres:18`).
 
 ```sh
 cp deploy/db/dev.env.example deploy/db/dev.env   # then replace every CHANGE_ME; the file is gitignored
